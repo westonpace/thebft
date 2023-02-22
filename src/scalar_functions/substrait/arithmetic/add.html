@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Add - bft</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Reference for the add function">
+    <link rel="stylesheet" href="./terminal.min.css">
+</head>
+
+<body class="terminal">
+    <header class="container terminal-nav">
+        <div class="terminal-logo">
+            <div class="logo terminal-prompt">
+                <a href="#">The BFT</a>
+            </div>
+        </div>
+        <nav class="terminal-menu">
+            <ul>
+                <li>
+                    <a class="menu-item">Link One</a>
+                </li>
+                <li>
+                    <a class="menu-item active">Link Two</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <article class="container">
+        <h2>Add</h2>
+        <section>
+            <p>
+                Defined in <a
+                    href="https://github.com/substrait-io/substrait/blob/main/extensions/functions_arithmetic.yaml">functions_arithmetic.yaml</a>
+            </p>
+            <hr>
+            <p>
+                Add two values.
+            </p>
+        </section>
+        <hr>
+        <section>
+            <h3>Options</h3>
+            <h4>overflow</h4>
+            Adding two integers can trigger an overflow when the result is outside the representable range of
+            the type class. This option controls what happens when this overflow occurs.
+            <dl>
+                <dt>SILENT</dt>
+                <dd>If an overflow occurs then an integer value will be returned. The value is undefined. It may
+                    be any integer and can change from engine to engine or even from row to row within the same query.
+                </dd>
+                <dt>SATURATE</dt>
+                <dd>If an overflow occurs then the largest (for positive overflow) or smallest (for negative overflow)
+                    possible value for the type class will be returned.</dd>
+                <dt>ERROR</dt>
+                <dd>If an overflow occurs then an error should be raised.</dd>
+            </dl>
+            <h4>rounding</h4>
+            Adding two floating point numbers can yield a result that is not exactly representable in the given type
+            class. In this case the value will be rounded. Rounding behaviors are defined as part of the IEEE 754
+            standard.
+            <dl>
+                <dt>TIE_TO_EVEN</dt>
+                <dd>Round to the nearest value. If the number is exactly halfway between two values then round to
+                    the number whose least significant digit is even. Or, because we are working with binary digits,
+                    round to the number whose last digit is 0. This is the default behavior in many systems because it
+                    helps to avoid bias in rounding.
+                </dd>
+                <dt>TIE_AWAY_FROM_ZERO</dt>
+                <dd>Round to the nearest value. If the number is exactly halfway between two values then round to
+                    the number furthest from zero.
+                </dd>
+                <dt>TRUNCATE</dt>
+                <dd>Round to the nearest value. If the number is exactly halfway between two values then round to the
+                    value closest to zero.</dd>
+                <dt>CEILING</dt>
+                <dd>Round to the value closest to positive infinity.</dd>
+                <dt>FLOOR</dt>
+                <dd>Round to the value closest to negative infinity.</dd>
+            </dl>
+        </section>
+        <hr>
+        <section>
+            <h3>Kernels</h3>
+            <ul>
+                <li>add(i8, i8) -> i8 : [overflow]</li>
+                <li>add(i16, i16) -> i16 : [overflow]</li>
+                <li>add(i32, i32) -> i32 : [overflow]</li>
+                <li>add(i64, i64) -> i64 : [overflow]</li>
+                <li>add(fp32, fp32) -> fp32 : [rounding]</li>
+                <li>add(fp64, fp64) -> fp64 : [rounding]</li>
+            </ul>
+        </section>
+        <hr>
+        <section>
+            <h3>Dialects</h3>
+            <select id="dialect">
+                <option>Spark SQL</option>
+                <option>Presto SQL</option>
+            </select>
+            <dl>
+                <dt>overflow</dt>
+                <dd>SILENT</dd>
+                <dt>rounding</dt>
+                <dd>TIE_TO_EVEN</dd>
+            </dl>
+        </section>
+        <hr>
+        <section>
+            <h3>Details</h3>
+            <h4>Other floating point exceptions</h4>
+            The IEEE 754 standard defines a number of exceptions beyond rounding. For example, division by zero,
+            overflow, and underflow. However, these exceptions have default behaviors defined by IEEE 754 and, since no
+            known engine deviates from these default values, these exceptions are not exposed as options. For more
+            information on what happens in these cases refer to the IEEE 754 standard.
+        </section>
+        <hr>
+        <section>
+            <h3>Properties</h3>
+            <dl>
+                <dt>Null propagating</dt>
+                <dd>If any of the inputs is null then the output will be null</dd>
+                <dt>Stateless</dt>
+                <dd>The output will be the same regardless of the order of input rows. This is not true for integer
+                    addition when overflow is SILENT.</dd>
+                <dt>Commutative</dt>
+                <dd>The output will be the same regardless of the order of input columns. This is not true for integer
+                    addition when overflow is SILENT.</dd>
+            </dl>
+        </section>
+        <hr>
+        <section>
+            <h3>Examples</h3>
+            <table>
+                <caption>Basic Addition</caption>
+                <thead>
+                    <tr>
+                        <th>arg0 (int8)</th>
+                        <th>arg1 (int8)</th>
+                        <th>result (int8)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>-5</td>
+                        <td>-4</td>
+                    </tr>
+                </tbody>
+            </table>
+            <table>
+                <caption>Integer Overflow</caption>
+                <thead>
+                    <tr>
+                        <th>overflow</th>
+                        <th>arg0 (int8)</th>
+                        <th>arg1 (int8)</th>
+                        <th>result (int8)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>SILENT</td>
+                        <td>120</td>
+                        <td>10</td>
+                        <td>UNDEFINED</td>
+                    </tr>
+                    <tr>
+                        <td>SATURATE</td>
+                        <td>120</td>
+                        <td>10</td>
+                        <td>127</td>
+                    </tr>
+                    <tr>
+                        <td>SATURATE</td>
+                        <td>-120</td>
+                        <td>-10</td>
+                        <td>-128</td>
+                    </tr>
+                    <tr>
+                        <td>ERROR</td>
+                        <td>-120</td>
+                        <td>-10</td>
+                        <td>ERROR</td>
+                    </tr>
+                </tbody>
+            </table>
+            <table>
+                <caption>Floating Point Rounding</caption>
+                <thead>
+                    <tr>
+                        <th>rounding</th>
+                        <th>arg0 (float32)</th>
+                        <th>arg1 (float32)</th>
+                        <th>result (float32)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>TIE_TO_EVEN</td>
+                        <td>4.5</td>
+                        <td>2.5000007152557373046875</td>
+                        <td>7.00000095367431640625</td>
+                    </tr>
+                    <tr>
+                        <td>FLOOR</td>
+                        <td>4.5</td>
+                        <td>2.5000007152557373046875</td>
+                        <td>7.000000476837158203125</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </article>
+</body>
+
+</html>
